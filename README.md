@@ -12,6 +12,7 @@ Kişi isimleri örnek isimlerle değiştirilmiştir. PIN erişimi demo için kal
 ## Yerel geliştirme
 npm ci
 npm run dev
+# Tarayıcıda /demo.html adresini açın.
 
 ## Doğrulama
 npm test
@@ -20,16 +21,9 @@ npm run build
 ## GitHub Pages
 Canlı demo: https://r5vers.github.io/ortak-kasa/
 
-Yayın dosyaları docs/ klasöründedir. Değişikliklerden sonra:
+Yayın dosyaları `docs/` içinde, yayın giriş sayfası deponun kökündedir.
+Değişikliklerden sonra `npm ci`, `npm test` ve `npm run build` komutlarını çalıştırın.
+Build komutu hem docs/ klasörünü hem kökteki index.html dosyasını günceller.
 
-```bash
-npm ci
-npm test
-npm run build
-rm -rf docs
-cp -r dist docs
-touch docs/.nojekyll
-```
-
-GitHub Pages, main dalındaki /docs klasöründen yayınlanır.
+GitHub Pages, main dalının kökünden yayınlanır. Kaynak HTML şablonu demo.html dosyasıdır.
 Bu proje bağımsız bir tarayıcı demosudur; sunucu veritabanı ve kullanıcı doğrulaması içermez.
