@@ -1,0 +1,28 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { demoFetch, resetDemo } from '../src/demo-store.ts';
+const memory = new Map<string,string>();
+Object.defineProperty(globalThis,'localStorage',{value:{getItem:(k:string)=>memory.get(k)??null,setItem:(k:string,v:string)=>memory.set(k,v),removeItem:(k:string)=>memory.delete(k)}});
+const get = async(path:string) => (await demoFetch(path)).json();
+const post = async(path:string,body:unknown) => demoFetch(path,{method:'POST',body:JSON.stringify(body)});
+test('empty demo, transactions, recurring month-end, cards, persistence and reset',async()=>{
+  resetDemo(); assert.deepEqual((await get('/api/transactions')).transactions,[]);
+  const created = await post('/api/transactions',{person:'Deniz',kind:'expense',amount:100,category:'Kira',note:'Demo',date:'2026-01-31',recurring:true});
+  assert.equal(created.status,201);
+  let data = await get('/api/transactions?month=2026-02');
+  assert.equal(data.transactions.length,2);
+  assert.equal(data.transactions[0].date,'2026-02-28');
+  assert.equal((await get('/api/transactions?month=2026-02')).transactions.length,2);
+  await demoFetch('/api/transactions?id='+data.transactions[1].id,{method:'DELETE'});
+  assert.equal((await get('/api/transactions')).transactions.length,1);
+  assert.equal((await post('/api/transactions',{person:'Deniz',kind:'income',amount:-1,category:'Maaş',date:'2026-02-01'})).status,400);
+  await post('/api/cards',{action:'expense',person:'Ege',amount:500,note:'Market',date:'2026-02-01'});
+  await post('/api/cards',{action:'payment',person:'Ege',amount:200,date:'2026-02-02'});
+  await post('/api/cards',{action:'statementDay',person:'Ege',day:20});
+  data = await get('/api/cards');
+  assert.equal(data.expenses[0].amount-data.payments[0].amount,300);
+  assert.equal(data.cards.find((x:any)=>x.person==='Ege').statementDay,20);
+  resetDemo();
+  assert.deepEqual((await get('/api/transactions')).transactions,[]);
+  assert.deepEqual((await get('/api/cards')).expenses,[]);
+});
